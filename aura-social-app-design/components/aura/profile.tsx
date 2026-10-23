@@ -3,22 +3,24 @@
 import { motion } from 'framer-motion'
 import { Grid3x3, Lock, Settings, Zap } from 'lucide-react'
 import Image from 'next/image'
-import { ME, formatAura, formatCompact, formatRemaining, type ProfilePost } from '@/lib/aura-data'
+import { formatAura, formatCompact, formatRemaining, type Creator, type ProfilePost } from '@/lib/aura-data'
 import { remainingMs, type Clock } from '@/lib/use-clock'
 import { cn } from '@/lib/utils'
 
 type Props = {
   posts: ProfilePost[]
   clock: Clock
+  creator?: Creator
 }
 
-export function Profile({ posts, clock }: Props) {
+export function Profile({ posts, clock, creator }: Props) {
+  const me = creator ?? { username: 'kaito.hk', name: 'Kaito Wong', avatar: '/avatars/me.png' }
   const total = posts.reduce((sum, p) => (remainingMs(clock, p.unlockOffsetMs) <= 0 ? sum + p.netAura : sum), 0)
 
   return (
     <div className="no-scrollbar h-full overflow-y-auto">
       <header className="flex items-center justify-between px-4 pb-2 pt-[max(env(safe-area-inset-top),1rem)]">
-        <h1 className="text-lg font-bold">@{ME.username}</h1>
+        <h1 className="text-lg font-bold">@{me.username}</h1>
         <button
           type="button"
           aria-label="Settings"
@@ -31,11 +33,11 @@ export function Profile({ posts, clock }: Props) {
       <section className="flex flex-col items-center gap-3 px-4 pt-2">
         <div className="rounded-full bg-gradient-to-br from-aura-pos via-aura-accent to-aura-neg p-[3px] shadow-[0_0_40px_-8px_var(--aura-accent)]">
           <div className="relative size-24 overflow-hidden rounded-full border-4 border-background">
-            <Image src={ME.avatar || '/placeholder.svg'} alt={ME.name} fill sizes="96px" className="object-cover" priority />
+            <Image src={me.avatar || '/placeholder.svg'} alt={me.name} fill sizes="96px" className="object-cover" priority />
           </div>
         </div>
         <div className="text-center">
-          <p className="text-xl font-black">{ME.name}</p>
+          <p className="text-xl font-black">{me.name}</p>
           <p className="text-sm text-muted-foreground">Central, Hong Kong · chasing good aura only</p>
         </div>
 

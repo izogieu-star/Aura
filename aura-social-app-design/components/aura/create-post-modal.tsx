@@ -8,19 +8,20 @@ import { cn } from '@/lib/utils'
 
 const MAX_CAPTION = 150
 
-export type NewPost = { media: string; mediaType: 'image' | 'video'; caption: string; location: string }
+export type NewPost = { file: File; mediaType: 'image' | 'video'; caption: string; location: string }
 
 type Props = {
   open: boolean
   onClose: () => void
-  onSubmit: (post: NewPost) => void
+  onSubmit: (post: NewPost) => Promise<void>
 }
 
 export function CreatePostModal({ open, onClose, onSubmit }: Props) {
-  const [media, setMedia] = useState<{ url: string; type: 'image' | 'video' } | null>(null)
+  const [media, setMedia] = useState<{ url: string; type: 'image' | 'video'; file: File } | null>(null)
   const [caption, setCaption] = useState('')
   const [location, setLocation] = useState(HK_LOCATIONS[0])
   const [dragging, setDragging] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
   const captionId = useId()
@@ -30,7 +31,7 @@ export function CreatePostModal({ open, onClose, onSubmit }: Props) {
     if (!file) return
     if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) return
     if (media) URL.revokeObjectURL(media.url)
-    setMedia({ url: URL.createObjectURL(file), type: file.type.startsWith('video/') ? 'video' : 'image' })
+    setMedia({ url: URL.createObjectURL(file), type: file.type.startsWith('video/') ? 'video' : 'image', file })
   }
 
   function reset() {
@@ -39,11 +40,18 @@ export function CreatePostModal({ open, onClose, onSubmit }: Props) {
     setLocation(HK_LOCATIONS[0])
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!media) return
-    onSubmit({ media: media.url, mediaType: media.type, caption: caption.trim(), location })
-    reset()
+    if (!media || submitting) return
+    setSubmitting(true)
+    try {
+      await onSubmit({ file: media.file, mediaType: media.type, caption: caption.trim(), location })
+      reset()
+    } catch {
+      // error handled by parent via alert or state
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -229,12 +237,21 @@ export function CreatePostModal({ open, onClose, onSubmit }: Props) {
 
             <motion.button
               type="submit"
-              disabled={!media}
-              whileTap={media ? { scale: 0.96 } : undefined}
+              disabled={!media || submitting}
+              whileTap={media && !submitting ? { scale: 0.96 } : undefined}
               className="mt-auto flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-aura-pos via-aura-accent to-aura-neg text-base font-black text-white shadow-[0_0_40px_-10px_var(--aura-accent)] transition-opacity disabled:opacity-40"
             >
-              <Sparkles className="size-5" aria-hidden="true" />
-              Drop Aura Post
+              {submitting ? (
+                <>
+                  <RefreshCw className="size-5 animate-spin" aria-hidden="true" />
+                  Uploading…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="size-5" aria-hidden="true" />
+                  Drop Aura Post
+                </>
+              )}
             </motion.button>
           </form>
         </motion.div>

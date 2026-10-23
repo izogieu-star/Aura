@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Crown, Trophy } from 'lucide-react'
 import Image from 'next/image'
 import { useMemo, useState } from 'react'
-import { ME, formatAura, formatCompact, getLeaderboard, type Ranked, type Scope, type Timeframe } from '@/lib/aura-data'
+import { formatAura, formatCompact, getLeaderboard, type Ranked, type Scope, type Timeframe } from '@/lib/aura-data'
+import { useAuth } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
 
 const scopes: { id: Scope; label: string }[] = [
@@ -20,6 +21,8 @@ const timeframes: { id: Timeframe; label: string }[] = [
 ]
 
 export function Leaderboard() {
+  const { profile } = useAuth()
+  const myUsername = profile?.username ?? 'kaito.hk'
   const [scope, setScope] = useState<Scope>('hk')
   const [timeframe, setTimeframe] = useState<Timeframe>('week')
   const board = useMemo(() => getLeaderboard(scope, timeframe), [scope, timeframe])
@@ -69,14 +72,14 @@ export function Leaderboard() {
                 transition={{ delay: Math.min(i, 12) * 0.025 }}
                 className={cn(
                   'flex items-center gap-3 rounded-2xl border border-white/5 bg-card px-3 py-2.5',
-                  entry.username === ME.username && 'border-aura-accent/60 bg-aura-accent/10',
+                  entry.username === myUsername && 'border-aura-accent/60 bg-aura-accent/10',
                 )}
               >
                 <span className="w-8 text-center font-mono text-sm font-bold text-muted-foreground">{entry.rank}</span>
                 <Avatar entry={entry} size={40} />
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                   @{entry.username}
-                  {entry.username === ME.username && (
+                  {entry.username === myUsername && (
                     <span className="ml-1.5 rounded-full bg-aura-accent px-1.5 py-0.5 text-[10px] font-bold text-white">
                       YOU
                     </span>

@@ -4,25 +4,26 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowUp, X } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
-import type { Comment, Post } from '@/lib/aura-data'
-import { ME } from '@/lib/aura-data'
+import type { Comment, Creator, Post } from '@/lib/aura-data'
 
 type Props = {
   post: Post | null
   onClose: () => void
   onAdd: (postId: string, comment: Comment) => void
+  myCreator?: Creator
 }
 
-export function CommentsDrawer({ post, onClose, onAdd }: Props) {
+export function CommentsDrawer({ post, onClose, onAdd, myCreator }: Props) {
   const [text, setText] = useState('')
 
   function submit() {
     const value = text.trim()
     if (!post || !value) return
+    const c = myCreator ?? { username: 'kaito.hk', name: 'Kaito Wong', avatar: '/avatars/me.png' }
     onAdd(post.id, {
       id: `c-${Date.now()}`,
-      username: ME.username,
-      avatar: ME.avatar,
+      username: c.username,
+      avatar: c.avatar,
       text: value,
       ago: 'now',
     })
